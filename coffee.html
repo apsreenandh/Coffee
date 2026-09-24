@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>☕ Coffee?</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f5e6d3;
+}
+
+/* POPUP */
+.popup {
+    position: fixed;
+    width: 330px;
+    padding: 25px;
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 10px 35px rgba(0,0,0,.25);
+    text-align: center;
+    z-index: 10;
+}
+
+.coffee {
+    font-size: 50px;
+    margin-bottom: 10px;
+}
+
+h2 {
+    margin: 5px 0 10px;
+    color: #4b2e20;
+}
+
+p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+/* BUTTON AREA */
+.buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    height: 50px;
+    position: relative;
+}
+
+button {
+    border: none;
+    padding: 10px 25px;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform .2s ease;
+    position: absolute;
+    width: 90px;
+}
+
+#yes {
+    background: #6f4e37;
+    color: white;
+    left: calc(50% - 97px);
+}
+
+#no {
+    background: #ddd;
+    color: #333;
+    left: calc(50% + 7px);
+}
+
+button:hover {
+    transform: scale(1.08);
+}
+
+/* RESULT OVERLAY */
+.overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.55);
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+}
+
+.result {
+    width: 320px;
+    background: white;
+    padding: 35px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,.3);
+}
+
+.result-icon {
+    font-size: 60px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="popup" id="popup">
+
+    <div class="coffee">☕</div>
+
+    <h2>Do you offer a coffee?</h2>
+
+    <p>Just a small cup... maybe? 😄</p>
+
+    <div class="buttons" id="buttons">
+        <button id="yes">Yes</button>
+        <button id="no">No</button>
+    </div>
+
+</div>
+
+
+<div class="overlay" id="overlay">
+
+    <div class="result">
+
+        <div class="result-icon" id="resultIcon">
+            ☕❤️
+        </div>
+
+        <h2 id="resultTitle">
+            Yay!
+        </h2>
+
+        <p id="resultText">
+            Coffee accepted!
+        </p>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================
+   ELEMENTS
+========================= */
+
+const popup = document.getElementById("popup");
+const buttons = document.getElementById("buttons");
+
+const yes = document.getElementById("yes");
+const no = document.getElementById("no");
+
+const overlay = document.getElementById("overlay");
+
+const resultIcon = document.getElementById("resultIcon");
+const resultTitle = document.getElementById("resultTitle");
+const resultText = document.getElementById("resultText");
+
+
+/* =========================
+   FULLSCREEN
+========================= */
+
+document.addEventListener("click", function enterFullscreen() {
+
+    if (!document.fullscreenElement) {
+
+        document.documentElement
+            .requestFullscreen()
+            .catch(() => {});
+
+    }
+
+}, { once: true });
+
+
+/* =========================
+   MOUSE TRACKING
+========================= */
+
+const followSpeed = 0.035;
+
+let swapLocked = false;
+
+const swapCooldown = 350;
+
+let mouseX = window.innerWidth / 2;
+let mouseY = window.innerHeight / 2;
+
+
+document.addEventListener("mousemove", function(event) {
+
+    mouseX = event.clientX;
+    mouseY = event.clientY;
+
+});
+
+
+/* =========================
+   POPUP POSITION
+========================= */
+
+let popupX =
+    window.innerWidth / 2 - 165;
+
+let popupY =
+    window.innerHeight / 2 - 120;
+
+
+/* =========================
+   FOLLOW MOUSE
+========================= */
+
+function followMouse() {
+
+    const yesRect =
+        yes.getBoundingClientRect();
+
+    const yesCenterX =
+        yesRect.left + yesRect.width / 2;
+
+    const yesCenterY =
+        yesRect.top + yesRect.height / 2;
+
+
+    const differenceX =
+        mouseX - yesCenterX;
+
+    const differenceY =
+        mouseY - yesCenterY;
+
+
+    popupX += differenceX * followSpeed;
+    popupY += differenceY * followSpeed;
+
+
+    const width =
+        popup.offsetWidth;
+
+    const height =
+        popup.offsetHeight;
+
+
+    /* Keep popup inside screen */
+
+    popupX = Math.max(
+        10,
+        Math.min(
+            popupX,
+            window.innerWidth - width - 10
+        )
+    );
+
+    popupY = Math.max(
+        10,
+        Math.min(
+            popupY,
+            window.innerHeight - height - 10
+        )
+    );
+
+
+    popup.style.left =
+        popupX + "px";
+
+    popup.style.top =
+        popupY + "px";
+
+
+    requestAnimationFrame(followMouse);
+
+}
+
+followMouse();
+
+
+/* =========================
+    NO BUTTON HOVER
+   SWAP POSITIONS
+========================= */
+
+no.addEventListener("mouseenter", function() {
+
+    if (swapLocked) return;
+
+    swapLocked = true;
+
+
+    const yesRect =
+        yes.getBoundingClientRect();
+
+    const noRect =
+        no.getBoundingClientRect();
+
+    const buttonsRect =
+        buttons.getBoundingClientRect();
+
+
+    const yesLeft =
+        yesRect.left - buttonsRect.left;
+
+    const yesTop =
+        yesRect.top - buttonsRect.top;
+
+
+    const noLeft =
+        noRect.left - buttonsRect.left;
+
+    const noTop =
+        noRect.top - buttonsRect.top;
+
+
+    /* Swap physical positions */
+
+    yes.style.left =
+        noLeft + "px";
+
+    yes.style.top =
+        yesTop + "px";
+
+
+    no.style.left =
+        yesLeft + "px";
+
+    no.style.top =
+        noTop + "px";
+
+
+    /* Prevent rapid shaking glitch */
+
+    setTimeout(function() {
+
+        swapLocked = false;
+
+    }, swapCooldown);
+
+});
+
+
+/* =========================
+   YES BUTTON
+========================= */
+
+yes.addEventListener("click", function() {
+
+    showResult(
+        "☕❤️",
+        "Yay!",
+        "Coffee accepted! 😌"
+    );
+
+});
+
+
+/* =========================
+   NO BUTTON
+========================= */
+
+no.addEventListener("click", function() {
+
+    showResult(
+        "🧠😄",
+        "You are very smart!",
+        "You actually managed to click No!"
+    );
+
+});
+
+
+/* =========================
+   SHOW RESULT
+========================= */
+
+function showResult(icon, title, text) {
+
+    resultIcon.textContent = icon;
+
+    resultTitle.textContent = title;
+
+    resultText.textContent = text;
+
+    overlay.style.display = "flex";
+
+}
+
+
+/* =========================
+   WINDOW RESIZE
+========================= */
+
+window.addEventListener("resize", function() {
+
+    popupX = Math.min(
+        popupX,
+        window.innerWidth -
+        popup.offsetWidth -
+        10
+    );
+
+    popupY = Math.min(
+        popupY,
+        window.innerHeight -
+        popup.offsetHeight -
+        10
+    );
+
+});
+
+</script>
+
+</body>
+</html>
